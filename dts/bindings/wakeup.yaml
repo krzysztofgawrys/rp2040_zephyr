@@ -1,0 +1,18 @@
+# Copyright (c) 2018, Linaro Limited
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  This allows you to define a group of LEDs. Each LED in the group is
+
+compatible: "wakeup"
+
+child-binding:
+  description: RTC Wakeup PIN
+  properties:
+    wakeup-source:
+      type: boolean
+    gpios:
+      type: phandle-array
+      required: true
+    label:
+      type: string

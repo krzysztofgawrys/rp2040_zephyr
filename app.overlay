@@ -1,0 +1,150 @@
+/ {
+        chosen {
+                zephyr,console = &usb;
+                uart,passthrough = &uart0;
+        };
+
+        leds {
+                compatible = "gpio-leds";
+                led0: led_0 {
+                        gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
+                        label = "LED";
+                };
+                // led1: led_1 {
+                        //         gpios = <&gpio0 14 GPIO_ACTIVE_HIGH>;
+                        //         label = "LED";
+                // };
+                // led2: led_2 {
+                        //         gpios = <&gpio0 15 GPIO_ACTIVE_HIGH>;
+                        //         label = "LED";
+                // };
+        };
+
+        pwr_control {
+                compatible = "gpio-leds";
+                gsmpwr: gsmpwr {
+                        gpios = <&gpio0 11 GPIO_ACTIVE_HIGH>;
+                        label = "GSM";
+                };
+                sdpwr: sdpwr {
+                        gpios = <&gpio0 18 GPIO_ACTIVE_HIGH>;
+                        label = "SDCARD";
+                };
+                inapwr: inapwr {
+                        gpios = <&gpio0 5 GPIO_ACTIVE_HIGH>;
+                        label = "INA219";
+                };
+        };
+
+
+        zephyr,user {
+                io-channels = <&adc 2>;
+                pwr-gpios = <&gpio0 6 GPIO_ACTIVE_HIGH>,
+                            <&gpio0 8 GPIO_ACTIVE_HIGH>,
+                            <&gpio0 9 GPIO_ACTIVE_HIGH>,
+                            <&gpio0 10 GPIO_ACTIVE_HIGH>,
+                            <&gpio0 4 GPIO_ACTIVE_HIGH>,
+                            <&gpio0 2 GPIO_ACTIVE_LOW>,
+                            <&gpio0 3 GPIO_ACTIVE_LOW>,
+                            <&gpio0 26 GPIO_ACTIVE_LOW>,
+                            <&gpio0 27 GPIO_ACTIVE_LOW>;
+                ina219_def = <&ina219_def>;
+                pcf_def = <&pcf_def>;
+        };
+
+        aliases {
+                led0 = &led0;
+                // led1 = &led1;
+                gsmpwr = &gsmpwr;
+                inapwr = &inapwr;
+                sdpwr = &sdpwr;
+                ina219def = &ina219_def;
+                pcfdef = &pcf_def;
+                i2c1 = &i2c1;
+        };
+
+};
+
+&uart0 {
+        current-speed = <115200>;
+        status = "okay";
+        pinctrl-0 = <&uart_gsm>;
+        pinctrl-names = "default";
+};
+
+&pinctrl {
+        uart_gsm: uart_gsm {
+                group1 {
+                        pinmux = <UART0_TX_P16>;
+                };
+                group2 {
+                        pinmux = <UART0_RX_P17>;
+                        input-enable;
+                };
+        };
+        ina219_def: ina219_def {
+                group1 {
+                        pinmux = <I2C1_SDA_P2>, <I2C1_SCL_P3>;
+                        input-enable;
+                        input-schmitt-enable;
+                };
+        };
+        pcf_def: pcf_def {
+                group1 {
+                        pinmux = <I2C1_SDA_P26>, <I2C1_SCL_P27>;
+                        input-enable;
+                        input-schmitt-enable;
+                };
+        };
+};
+
+&zephyr_udc0 {
+        usb: usb {
+                compatible = "zephyr,cdc-acm-uart";
+                label = "CDC_ACM_0";
+        };
+};
+
+&i2c1 {
+        status = "okay";
+        clock-frequency = <I2C_BITRATE_STANDARD>;
+
+        pcf: i2c1@68 {
+                compatible = "nxp,pcf8523";
+                reg = <0x68>;
+                clkout-frequency = <0>;
+                alarms-count = <1>;
+                battery-switch-over = "disabled";
+                int1-gpios = <&gpio0 25 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+                zephyr,deferred-init;
+        };
+
+        ina: i2c1@40 {
+                compatible = "ti,ina219";
+                reg = <0x40>;
+                brng = <0>;
+                pg = <0>;
+                sadc = <13>;
+                badc = <13>;
+                shunt-milliohm = <100>;
+                lsb-microamp = <10>;
+                zephyr,deferred-init;
+        };
+};
+
+&pico_header {
+        status = "okay";
+};
+
+&adc {
+        #address-cells = <1>;
+        #size-cells = <0>;
+
+        channel@2 {
+                reg = <2>;
+                zephyr,gain = "ADC_GAIN_1";
+                zephyr,reference = "ADC_REF_INTERNAL";
+                zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+                zephyr,resolution = <12>;
+        };
+};
