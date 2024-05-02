@@ -266,22 +266,11 @@ void pinctrl_free_pins(const struct pinctrl_dev_config *config, uint8_t id)
     int err = pinctrl_lookup_state(config, id, &state);
     if (err < 0)
     {
-        LOG_ERR("Could not pinctrl_lookup_state I2C1");
+        LOG_ERR("Could not pinctrl_lookup_state");
     }
 
-    uintptr_t reg = PINCTRL_REG_NONE;
-
-    for (uint8_t i = 0U; i < state->pin_cnt; i++)
-    {
-        const pinctrl_soc_pin_t *pin = state->pins++;
-        gpio_init(pin->pin_num);
-        gpio_set_function(pin->pin_num, GPIO_FUNC_NULL);
-        gpio_set_pulls(pin->pin_num, false, false);
-        gpio_set_drive_strength(pin->pin_num, 0);
-        gpio_set_slew_rate(pin->pin_num, GPIO_SLEW_RATE_FAST);
-        gpio_set_input_hysteresis_enabled(pin->pin_num, false);
-        gpio_set_input_enabled(pin->pin_num, false);
-    }
+    LOG_INF("Free pin %u", state->pins->pin_num);
+    gpio_set_input_enabled(state->pins->pin_num, false);
 }
 
 int main(void)
